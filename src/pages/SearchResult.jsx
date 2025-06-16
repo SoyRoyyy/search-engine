@@ -1,69 +1,59 @@
-import { useLocation, useNavigate } from "react-router-dom";
-import { useState } from "react";
+import { useLocation, Link } from "react-router-dom"; // Ganti useNavigate dengan Link
 import searchData from "../data/searchData";
-import { FiSearch } from "react-icons/fi";
+import Navbar from "../assets/components/Navbar"; // Impor Navbar
 
 function useQuery() {
   return new URLSearchParams(useLocation().search);
 }
 
 function SearchResults() {
-  const navigate = useNavigate();
   const queryParam = useQuery().get("q") || "";
-  const [query, setQuery] = useState(queryParam);
+  const query = queryParam; // Kita hanya perlu query dari URL
 
-  const filteredResults = searchData.filter((item) =>
-    item.title.toLowerCase().includes(query.toLowerCase()) ||
-    item.description.toLowerCase().includes(query.toLowerCase())
-  );
-
-  const handleSearch = (e) => {
-    e.preventDefault();
-    navigate(`/search?q=${encodeURIComponent(query)}`);
-  };
+  const filteredResults = query
+    ? searchData.filter((item) => {
+        const queryLower = query.toLowerCase();
+        return (
+          item.title.toLowerCase().includes(queryLower) ||
+          item.deskripsiSingkat.toLowerCase().includes(queryLower) ||
+          item.deskripsiPanjang.toLowerCase().includes(queryLower)
+        );
+      })
+    : [];
 
   return (
     <div className="min-h-screen bg-white">
-      {/* Navbar */}
-      <div className="flex items-center justify-between px-6 py-4 shadow-md bg-gray-50">
-        <h1 className="text-xl font-bold text-transparent bg-clip-text bg-gradient-to-r from-purple-600 via-blue-500 to-indigo-400 leading-[1.3]">
-          Yalali Search Engine</h1>
-        <form onSubmit={handleSearch} className="flex w-full max-w-xl ml-8">
-          <input
-            type="text"
-            placeholder="Cari sesuatu..."
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            className="flex-grow px-4 py-2 border border-gray-300 rounded-l-full focus:outline-none focus:ring-2 focus:ring-blue-400"
-          />
-          <button
-            type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-r-full hover:bg-blue-600 flex items-center justify-center"
-          >
-            <FiSearch size={20} />
-          </button>
-        </form>
-      </div>
+      <Navbar /> {/* Gunakan komponen Navbar di sini */}
 
-      {/* Hasil pencarian */}
       <div className="p-6">
-        <h2 className="text-md text-gray-700 mb-4">
-          Menampilkan hasil untuk: <span className="font-medium text-blue-600">{queryParam}</span>
-        </h2>
+        {query ? ( // Hanya tampilkan konten jika ada query
+          <>
+            <h2 className="text-md text-gray-700 mb-4">
+              Menampilkan hasil untuk: <span className="font-medium text-blue-600">{query}</span>
+            </h2>
 
-        {filteredResults.length > 0 ? (
-          <ul className="space-y-6">
-            {filteredResults.map((item) => (
-              <li key={item.id}>
-                <a href="#" className="text-blue-600 text-lg hover:underline">
-                  {item.title}
-                </a>
-                <p className="text-sm text-gray-600">{item.description}</p>
-              </li>
-            ))}
-          </ul>
+            {filteredResults.length > 0 ? (
+              <ul className="space-y-4">
+                {filteredResults.map((item) => (
+                  <li key={item.id} className="border-b pb-4 last:border-b-0">
+                    {/* Setiap item sekarang adalah Link ke halaman detail */}
+                    <Link to={`/item/${item.id}`} className="block group">
+                      <h3 className="text-xl text-blue-700 group-hover:underline font-medium">
+                        {item.title}
+                      </h3>
+                      <p className="text-sm text-gray-600 mt-1">
+                        {item.deskripsiSingkat}
+                      </p>
+                    </Link>
+                  </li>
+                ))}
+              </ul>
+            ) : (
+              <p className="text-red-500">Tidak ditemukan hasil untuk "{query}".</p>
+            )}
+          </>
         ) : (
-          <p className="text-red-500">Tidak ditemukan hasil untuk "{queryParam}".</p>
+          <p className="text-gray-700">Silakan masukkan kata kunci pada kolom pencarian di atas.</p>
         )}
       </div>
     </div>
